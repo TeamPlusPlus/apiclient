@@ -6,7 +6,7 @@
  *
  * @file apiclient.php
  *
- * @version 1.0
+ * @version 1.0.1
  * @author Lukas Bestle <http://lu-x.me>
  * @link https://github.com/TeamPlusPlus/apiclient
  * @copyright Copyright 2013 Lukas Bestle
@@ -273,29 +273,6 @@ class Episodes {
 		$obj->mp3   = isset($data['files']['media']['mp3'])?  $data['files']['media']['mp3']  : null;
 		$obj->ogg   = isset($data['files']['media']['ogg'])?  $data['files']['media']['ogg']  : null;
 		$obj->opus  = isset($data['files']['media']['opus'])? $data['files']['media']['opus'] : null;
-		
-		// Download links
-		$obj->media = array();
-		if(isset($data['files']['media'])) {
-			foreach($data['files']['media'] as $type => $mediaInfos) {
-				$resultType = $type;
-				switch($type) {
-					case 'mp3':
-						$resultType = 'MP3';
-						break;
-					case 'm4a':
-						$resultType = 'M4A';
-						break;
-					case 'opus':
-						$resultType = 'Opus';
-						break;
-					case 'ogg':
-						$resultType = 'Ogg Vorbis';
-				}
-				
-				$obj->media[$resultType] = $mediaInfos;
-			}
-		}
 		
 		// Other information
 		$obj->infos    = isset($data['infos'])?    $data['infos']    : array();
