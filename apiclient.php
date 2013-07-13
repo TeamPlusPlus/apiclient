@@ -6,7 +6,7 @@
  *
  * @file apiclient.php
  *
- * @version 1.0.1
+ * @version 1.0.2
  * @author Lukas Bestle <http://lu-x.me>
  * @link https://github.com/TeamPlusPlus/apiclient
  * @copyright Copyright 2013 Lukas Bestle
@@ -174,6 +174,43 @@ class Episodes {
 		
 		// Either parse it and return the object or just return the array
 		return ($raw)? $episodeData : static::objectify($episodeData);
+	}
+	
+	/**
+	 * Parse shownotes and add timestamps
+	 * 
+	 * @param string         $shownotes The parsed HTML for the shownotes
+	 * @param Kirby\CMS\Page $episode   The episode to get the timestamps from
+	 *
+	 * @return string                   The parsed shownotes HTML including timestamps
+	 */
+	public static function shownotes($shownotes, $episode) {
+		// Get the chapters
+		$infos = static::infos($episode, true);
+		$chapters = $infos['chapters'];
+		
+		// Sort them by name
+		$chaptersAnalyzed = array();
+		foreach($chapters as $chapter) {
+			// Re-parse the time
+			$timeParts = explode('.', $chapter['start']);
+			
+			// Add to re-indexed array
+			$chaptersAnalyzed[$chapter['title']] = $timeParts[0];
+		}
+		
+		// Get all headings (separating the chapters)
+		$shownotes = preg_replace_callback('{(?<=<h3>).*?(?=</h3>)}', function($matches) use($chaptersAnalyzed) {
+			if(!isset($chaptersAnalyzed[$matches[0]])) {
+				// The chapter time is not defined
+				return $matches[0];
+			}
+			
+			// Add the timestamp
+			return '[' . $chaptersAnalyzed[$matches[0]] . '] ' . $matches[0];
+		}, $shownotes);
+		
+		return $shownotes;
 	}
 	
 	/**
