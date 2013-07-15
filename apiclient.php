@@ -6,7 +6,7 @@
  *
  * @file apiclient.php
  *
- * @version 1.0.2
+ * @version 1.0.3
  * @author Lukas Bestle <http://lu-x.me>
  * @link https://github.com/TeamPlusPlus/apiclient
  * @copyright Copyright 2013 Lukas Bestle
@@ -187,6 +187,10 @@ class Episodes {
 	public static function shownotes($shownotes, $episode) {
 		// Get the chapters
 		$infos = static::infos($episode, true);
+		
+		// Is there any information?
+		if(!$infos) return $shownotes;
+		
 		$chapters = $infos['chapters'];
 		
 		// Sort them by name
@@ -235,6 +239,10 @@ class Episodes {
 			
 			if($timestamp == false) {
 				// No valid time stamp
+				if($page) {
+					// The page does exist and is ready but the media files are not ready
+					$state = STATE_RECORDED;
+				}
 			} else if($timestamp + 5400 <= time()) {
 				// 1.5h after the live date -> Episode is already over
 				$state = STATE_RECORDED;
