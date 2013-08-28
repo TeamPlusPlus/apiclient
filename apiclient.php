@@ -6,7 +6,7 @@
  *
  * @file apiclient.php
  *
- * @version 1.0.3
+ * @version 1.0.4
  * @author Lukas Bestle <http://lu-x.me>
  * @link https://github.com/TeamPlusPlus/apiclient
  * @copyright Copyright 2013 Lukas Bestle
