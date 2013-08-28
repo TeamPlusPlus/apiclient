@@ -22,6 +22,7 @@ define('STATE_OVER',     1);
 define('STATE_SOON',     2);
 define('STATE_LIVE',     3);
 define('STATE_RECORDED', 4);
+define('STATE_RELIVE',   5);
 
 /**
  * Episodes
@@ -226,7 +227,8 @@ class Episodes {
 	 */
 	private static function nextData($id) {
 		$state = STATE_NO;
-		$live  = "";
+		$live  = '';
+		$url   = '';
 		$page  = new StdClass();
 		
 		// Is it a valid episode ID?
@@ -237,18 +239,20 @@ class Episodes {
 			// Parse as time stamp
 			$timestamp = @strtotime($page->live());
 			
-			if($timestamp == false) {
+			// Ask the API if the episode is live
+			$results = json_decode(file_get_contents('http://media.plusp.lu/live/' . site()->subdomain()), true);
+			if($results['live'] == true) {
+				$state = STATE_LIVE;
+				$url   = $results['url'];
+			} else if($timestamp == false) {
 				// No valid time stamp
 				if($page) {
 					// The page does exist and is ready but the media files are not ready
 					$state = STATE_RECORDED;
 				}
-			} else if($timestamp + 5400 <= time()) {
+			} else if($timestamp + 1800 <= time()) {
 				// 1.5h after the live date -> Episode is already over
 				$state = STATE_RECORDED;
-			} else if($timestamp <= time()) {
-				// Currently on air
-				$state = STATE_LIVE;
 			} else {
 				// On air soon
 				$state = STATE_SOON;
@@ -291,10 +295,17 @@ class Episodes {
 			}
 		}
 		
+		// Check if a ReLive is available
+		if($state == STATE_RECORDED && static::status('http://media.plusp.lu/' . site()->subdomain() . '/' . $id . '.relive') == 'HTTP 200 OK') {
+			// Yep
+			$state = STATE_RELIVE;
+		}
+		
 		// Add the information to the page
 		$page->infos         = new StdClass();
 		$page->infos->state  = $state;
 		$page->infos->live   = $live;
+		$page->infos->url    = $url;
 		$page->infos->id     = ($id)? (int)$id : static::$newest + 1;
 		$page->infos->number = '#' . $page->infos->id;
 		
@@ -325,6 +336,19 @@ class Episodes {
 		$obj->chapters = isset($data['chapters'])? $data['chapters'] : array();
 		
 		return $obj;
+	}
+	
+	/**
+	 * Requests HTTP headers and returns the HTTP status
+	 * 
+	 * @param  string $url URL
+	 * @return int         HTTP status code
+	 */
+	private static function status($url) {
+		$headers = @get_headers($url);
+		$status = (isset($headers[0]))? $headers[0] : 'HTTP 0';
+		
+		return $status;
 	}
 }
 
